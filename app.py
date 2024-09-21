@@ -147,6 +147,12 @@ def stream_chat(input_image: Image.Image, caption_type: str, caption_tone: str, 
 	# 'any' means no length specified
 	length = None if caption_length == "any" else caption_length
 
+	if isinstance(length, str):
+		try:
+			length = int(length)
+		except ValueError:
+			pass
+
 	# 'rng-tags' and 'training_prompt' don't have formal/informal tones
 	if caption_type == "rng-tags" or caption_type == "training_prompt":
 		caption_tone = "formal"
