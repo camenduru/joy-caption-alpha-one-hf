@@ -144,12 +144,20 @@ image_adapter.to("cuda")
 def stream_chat(input_image: Image.Image, caption_type: str, caption_tone: str, caption_length: str | int) -> str:
 	torch.cuda.empty_cache()
 
+	# 'any' means no length specified
 	length = None if caption_length == "any" else caption_length
+
+	# 'rng-tags' and 'training_prompt' don't have formal/informal tones
+	if caption_type == "rng-tags" or caption_type == "training_prompt":
+		caption_tone = "formal"
+
+	# Build prompt
 	prompt_key = (caption_type, caption_tone, isinstance(length, str), isinstance(length, int))
 	if prompt_key not in CAPTION_TYPE_MAP:
 		raise ValueError(f"Invalid caption type: {prompt_key}")
 
-	prompt_str = CAPTION_TYPE_MAP[prompt_key][0]
+	prompt_str = CAPTION_TYPE_MAP[prompt_key][0].format(length=length, word_count=length)
+	print(f"Prompt: {prompt_str}")
 
 	# Preprocess image
 	#image = clip_processor(images=input_image, return_tensors='pt').pixel_values
@@ -229,6 +237,8 @@ with gr.Blocks() as demo:
 				label="Caption Length",
 				value="any",
 			)
+
+			gr.Markdown("**Note:** Caption tone doesn't affect `rng-tags` and `training_prompt`.")
 
 			run_button = gr.Button("Caption")
 		
